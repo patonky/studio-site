@@ -1,0 +1,13 @@
+import * as THREE from 'three';
+import {OrbitControls} from '../vendor/OrbitControls.js';
+import {createBowRiverModel,createBowRiverLighting,cameraPresets} from '../src/index.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color('#dce6ea');
+const camera=new THREE.PerspectiveCamera(39,innerWidth/innerHeight,1,5000);camera.position.set(-680,540,730);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.appendChild(renderer.domElement);
+const model=createBowRiverModel();scene.add(model.group,createBowRiverLighting());
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.47;
+let paused=false,last=performance.now();
+document.querySelector('#traffic').onclick=e=>{paused=!paused;e.target.textContent=paused?'Resume traffic':'Pause traffic';};
+document.querySelector('#view').onchange=e=>{const v=cameraPresets[e.target.value]??{eye:[-680,540,730],target:[0,0,0]};camera.position.set(...v.eye);controls.target.set(...v.target);controls.update();};
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+renderer.setAnimationLoop(now=>{const dt=Math.min((now-last)/1000,.1);last=now;if(!paused)model.update(dt);controls.update();renderer.render(scene,camera);});
